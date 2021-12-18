@@ -12,10 +12,12 @@ import { Car } from "./types";
 
   server
     .create({
-      "/": () => "Hello world!",
-      "/cars": async () => JSON.stringify(await resources.cars()),
+      "/": () => server.respondOk({ message: "Hello World!" }),
+      "/cars": async () => server.respondOk(await resources.cars()),
       "/tracks": async (_, { query }) =>
-        JSON.stringify(await resources.tracks(query!.car as Car)),
+        query?.car
+          ? server.respondOk(await resources.tracks(query!.car as Car))
+          : server.respond({ error: "Bad request" }, { statusCode: 400 }),
     })
     .listen(PORT, () => console.log(`🚀 Listening on localhost:${PORT}! 🚀`));
 })();

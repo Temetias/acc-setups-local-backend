@@ -1,4 +1,4 @@
-import http from "http";
+import http, { ServerResponse } from "http";
 import { ParsedUrlQuery } from "querystring";
 import url from "url";
 
@@ -8,7 +8,10 @@ type RequestData = { payload?: string; query?: ParsedUrlQuery };
 
 type Routes = Record<
   Path,
-  (req: http.IncomingMessage, data: RequestData) => string | Promise<string>
+  (
+    req: http.IncomingMessage,
+    data: RequestData
+  ) => RespondToken | Promise<RespondToken>
 >;
 
 const notFound = (path: Path, res: http.ServerResponse) => {
@@ -25,11 +28,7 @@ const getRouter =
     data: RequestData
   ) =>
     routes[path]
-      ? (async () => {
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.write(await routes[path](req, data));
-          res.end();
-        })()
+      ? (async () => (await routes[path](req, data))(res))()
       : notFound(path, res);
 
 const getReqHandler = (routes: Routes) => {
@@ -44,6 +43,35 @@ const getReqHandler = (routes: Routes) => {
 
 const create = (routes: Routes) => http.createServer(getReqHandler(routes));
 
+type RespondToken = (res: ServerResponse) => {
+  x: "NOT_TO_BE_DONE_MANUALLY_USE_RESPOND_BUILDERS";
+};
+
+const respond =
+  (
+    data: object,
+    {
+      statusCode,
+      ...headers
+    }: Omit<http.OutgoingHttpHeaders, "Content-Type"> & { statusCode: number }
+  ): RespondToken =>
+  (res: http.ServerResponse) => {
+    res.writeHead(statusCode, {
+      ...headers,
+      "Content-Type": "application/json",
+    });
+    res.write(JSON.stringify(data));
+    res.end();
+    return { x: "NOT_TO_BE_DONE_MANUALLY_USE_RESPOND_BUILDERS" };
+  };
+
+const respondOk = (
+  data: object,
+  headers: Omit<http.OutgoingHttpHeaders, "Content-Type"> = {}
+) => respond(data, { ...headers, statusCode: 200 });
+
 export default {
   create,
+  respond,
+  respondOk,
 };
