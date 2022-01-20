@@ -11,7 +11,6 @@ const DEFAULT_CONFIG: Configuration = {
   ),
 };
 const CONFIG_PATH = path.join(TODO, "acc-setups.json");
-const ENCODING = "utf-8";
 
 const exists = () =>
   fs
@@ -20,11 +19,11 @@ const exists = () =>
     .catch(() => false);
 
 const init = () =>
-  fs.writeFile(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG), ENCODING);
+  fs.writeFile(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG), "utf-8");
 
 const read = async (): Promise<Configuration> =>
   (await exists())
-    ? JSON.parse(await fs.readFile(CONFIG_PATH, ENCODING))
+    ? JSON.parse(await fs.readFile(CONFIG_PATH, "utf-8"))
     : init().then(read);
 
 const get = async (option: keyof Configuration) => (await read())[option];
@@ -36,7 +35,7 @@ const set = async <T extends keyof Configuration>(
   fs.writeFile(
     CONFIG_PATH,
     JSON.stringify({ ...(await read()), [option]: value }),
-    ENCODING
+    "utf-8"
   );
 
 export default {

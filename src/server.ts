@@ -44,7 +44,7 @@ const getReqHandler = (routes: Routes) => {
 const create = (routes: Routes) => http.createServer(getReqHandler(routes));
 
 type RespondToken = (res: ServerResponse) => {
-  x: "NOT_TO_BE_DONE_MANUALLY_USE_RESPOND_BUILDERS";
+  __x: "NOT_TO_BE_DONE_MANUALLY_USE_RESPOND_BUILDERS";
 };
 
 const respond =
@@ -59,10 +59,11 @@ const respond =
     res.writeHead(statusCode, {
       ...headers,
       "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
     });
     res.write(JSON.stringify(data));
     res.end();
-    return { x: "NOT_TO_BE_DONE_MANUALLY_USE_RESPOND_BUILDERS" };
+    return { __x: "NOT_TO_BE_DONE_MANUALLY_USE_RESPOND_BUILDERS" };
   };
 
 const respondOk = (
@@ -70,8 +71,12 @@ const respondOk = (
   headers: Omit<http.OutgoingHttpHeaders, "Content-Type"> = {}
 ) => respond(data, { ...headers, statusCode: 200 });
 
+const respondBadRequest = (reason: string) =>
+  respond({ error: "Bad request", reason }, { statusCode: 403 });
+
 export default {
   create,
   respond,
   respondOk,
+  respondBadRequest,
 };
