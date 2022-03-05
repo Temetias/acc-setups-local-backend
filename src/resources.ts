@@ -3,20 +3,26 @@ import path from "path";
 import * as utils from "./utils";
 import fs from "fs/promises";
 
-type SetupsDirPath = Configuration["setupsDirectoryPath"];
-
 export default {
-  initRoot: (setupsDir: SetupsDirPath) => ({
-    cars: () => utils.filesystem.dirsOfDir(setupsDir),
+  init: (
+    setupsDir: Configuration["setupsDirectoryPath"],
+    changeListener: Parameters<typeof utils.filesystem.watchRecursive>[1]
+  ) => {
+    utils.filesystem.watchRecursive(setupsDir, changeListener);
 
-    tracks: (car: Car) => utils.filesystem.dirsOfDir(path.join(setupsDir, car)),
+    return {
+      cars: () => utils.filesystem.dirsOfDir(setupsDir),
 
-    setups: (car: Car, track: Track) =>
-      utils.filesystem.filesOfDir(path.join(setupsDir, car, track)),
+      tracks: (car: Car) =>
+        utils.filesystem.dirsOfDir(path.join(setupsDir, car)),
 
-    setup: async (car: Car, track: Track, fileName: string) =>
-      JSON.parse(
-        await fs.readFile(path.join(setupsDir, car, track, fileName), "utf-8")
-      ),
-  }),
+      setups: (car: Car, track: Track) =>
+        utils.filesystem.filesOfDir(path.join(setupsDir, car, track)),
+
+      setup: async (car: Car, track: Track, fileName: string) =>
+        JSON.parse(
+          await fs.readFile(path.join(setupsDir, car, track, fileName), "utf-8")
+        ),
+    };
+  },
 };

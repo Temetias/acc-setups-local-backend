@@ -4,10 +4,17 @@ import configuration from "./configuration";
 import { Car, Track } from "./types";
 
 (async () => {
-  const PORT = process.env.PORT || 8888;
+  const PORT = parseInt(process.env.PORT || "8888");
 
-  const resources = resource.initRoot(
-    await configuration.get("setupsDirectoryPath")
+  const resources = resource.init(
+    await configuration.get("setupsDirectoryPath"),
+
+    // JÄIT TÄHÄN: WS EI RESOLVAA ENNENKU TULEE YHTEYS
+    await server.ws(PORT, {
+      onMessage: (msg) => console.log("Received ws message: ", msg),
+      onInit: () =>
+        console.log(`⚡ Websocket initiated on localhost:${PORT} ⚡`),
+    })
   );
 
   server

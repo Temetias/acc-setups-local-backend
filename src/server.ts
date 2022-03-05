@@ -1,6 +1,7 @@
 import http, { ServerResponse } from "http";
 import { ParsedUrlQuery } from "querystring";
 import url from "url";
+import WebSocket, { WebSocketServer } from "ws";
 
 type Path = `/${string}`;
 
@@ -74,7 +75,25 @@ const respondOk = (
 const respondBadRequest = (reason: string) =>
   respond({ error: "Bad request", reason }, { statusCode: 403 });
 
+type WSHandlers = {
+  onMessage: (data: WebSocket.RawData) => any;
+} & Partial<{
+  onInit: () => any;
+  onConn: (url: string) => any;
+}>;
+
+const ws = (port: number, { onMessage, onInit, onConn }: WSHandlers) =>
+  new Promise<(data: string) => any>((resolve) => {
+    onInit?.();
+    new WebSocketServer({ port }).on("connection", (conn) => {
+      onConn?.(conn.url);
+      conn.on("message", onMessage);
+      resolve(conn.send);
+    });
+  });
+
 export default {
+  ws,
   create,
   respond,
   respondOk,
